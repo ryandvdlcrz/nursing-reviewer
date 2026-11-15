@@ -48,9 +48,12 @@ function SubjectCard({ subject }) {
           </p>
         </div>
         {subject.due_cards > 0 && (
-          <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-brand-strong">
+          <Link
+            to={`/study?subject=${subject.subject_id}`}
+            className="shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-brand-strong hover:opacity-80"
+          >
             {subject.due_cards} due
-          </span>
+          </Link>
         )}
       </div>
       <div className="mt-4">

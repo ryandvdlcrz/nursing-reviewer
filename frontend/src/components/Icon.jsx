@@ -41,13 +41,14 @@ const PATHS = {
       <path d="M12 9v4l2.5 2M9 2h6" />
     </>
   ),
+  bookmark: <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />,
 }
 
-export default function Icon({ name, className = 'size-6' }) {
+export default function Icon({ name, className = 'size-6', filled = false }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      fill="none"
+      fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
