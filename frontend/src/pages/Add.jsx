@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { api } from '../api'
+import ScreenshotTab from '../components/ScreenshotTab'
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`
 
@@ -9,6 +10,12 @@ const inputClass =
 const labelClass = 'block text-sm font-semibold'
 const primaryButton =
   'rounded-xl bg-brand px-6 py-3 text-sm font-semibold text-on-brand transition hover:bg-brand-strong disabled:opacity-60'
+
+const TABS = [
+  { id: 'card', label: 'Card' },
+  { id: 'question', label: 'Question' },
+  { id: 'screenshot', label: 'Screenshot' },
+]
 
 function Notice({ added, noun }) {
   if (added === 0) return null
@@ -372,10 +379,7 @@ export default function Add() {
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-2 rounded-xl bg-surface-2 p-1">
-          {[
-            { id: 'card', label: 'Card' },
-            { id: 'question', label: 'Question' },
-          ].map((item) => (
+          {TABS.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -388,14 +392,6 @@ export default function Add() {
               {item.label}
             </button>
           ))}
-          <button
-            type="button"
-            disabled
-            title="Coming in the next step"
-            className="rounded-lg py-2.5 text-sm font-semibold text-muted opacity-60"
-          >
-            Screenshot
-          </button>
         </div>
 
         <div hidden={tab !== 'card'}>
@@ -403,6 +399,9 @@ export default function Add() {
         </div>
         <div hidden={tab !== 'question'}>
           <QuestionForm subjectId={selected} />
+        </div>
+        <div hidden={tab !== 'screenshot'}>
+          <ScreenshotTab subjectId={selected} />
         </div>
       </>
     )
