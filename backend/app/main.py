@@ -10,6 +10,7 @@ from app.routers import (
     cards,
     generate,
     notes,
+    progress,
     questions,
     stats,
     study,
@@ -40,6 +41,7 @@ app.include_router(stats.router, dependencies=protected)
 app.include_router(notes.router, dependencies=protected)
 app.include_router(bookmarks.router, dependencies=protected)
 app.include_router(backup.router, dependencies=protected)
+app.include_router(progress.router, dependencies=protected)
 
 
 @app.get("/health")
