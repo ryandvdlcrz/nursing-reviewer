@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
-import { clearToken, getToken, setUnauthorizedHandler } from './api'
+import {
+  clearToken,
+  getToken,
+  setUnauthorizedHandler,
+  wakeServer,
+} from './api'
 import AppShell from './components/AppShell'
+import ServerStatus from './components/ServerStatus'
 import Add from './pages/Add'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -15,6 +21,7 @@ export default function App() {
 
   useEffect(() => {
     setUnauthorizedHandler(() => setAuthed(false))
+    wakeServer()
   }, [])
 
   function logout() {
@@ -23,23 +30,31 @@ export default function App() {
   }
 
   if (!authed) {
-    return <Login onSuccess={() => setAuthed(true)} />
+    return (
+      <>
+        <ServerStatus />
+        <Login onSuccess={() => setAuthed(true)} />
+      </>
+    )
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppShell onLogout={logout} />}>
-          <Route index element={<Home />} />
-          <Route path="study" element={<Study />} />
-          <Route path="quiz" element={<Practice key="quiz" mode="quiz" />} />
-          <Route path="mock" element={<Practice key="mock" mode="mock" />} />
-          <Route path="add" element={<Add />} />
-          <Route path="stats" element={<Stats />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <>
+      <ServerStatus />
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppShell onLogout={logout} />}>
+            <Route index element={<Home />} />
+            <Route path="study" element={<Study />} />
+            <Route path="quiz" element={<Practice key="quiz" mode="quiz" />} />
+            <Route path="mock" element={<Practice key="mock" mode="mock" />} />
+            <Route path="add" element={<Add />} />
+            <Route path="stats" element={<Stats />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }

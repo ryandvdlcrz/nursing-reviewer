@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { api } from '../api'
 import Icon from '../components/Icon'
+import NotesPanel from '../components/NotesPanel'
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`
 
@@ -326,6 +327,10 @@ export default function Study() {
             Space shows the answer. Then press 1 for Again, 2 for Good, 3 for Easy.
           </p>
         </div>
+
+        {flipped && (
+          <NotesPanel key={card.id} targetType="card" targetId={card.id} />
+        )}
       </>
     )
   }

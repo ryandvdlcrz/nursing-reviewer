@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 const TOKEN_KEY = 'thaling_token'
+const SLOW_AFTER_MS = 4000
+const TIMEOUT_MS = 120000
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY)
@@ -29,9 +31,57 @@ export function setUnauthorizedHandler(handler) {
   onUnauthorized = handler
 }
 
+// Tracks requests that are taking a long time, so the app can show a message
+let slowCount = 0
+const slowListeners = new Set()
+
+function notifySlow() {
+  slowListeners.forEach((listener) => listener())
+}
+
+export function subscribeSlow(listener) {
+  slowListeners.add(listener)
+  return () => slowListeners.delete(listener)
+}
+
+export function getSlow() {
+  return slowCount > 0
+}
+
+function trackSlow() {
+  let marked = false
+  const timer = setTimeout(() => {
+    marked = true
+    slowCount += 1
+    notifySlow()
+  }, SLOW_AFTER_MS)
+
+  return () => {
+    clearTimeout(timer)
+    if (marked) {
+      slowCount -= 1
+      notifySlow()
+    }
+  }
+}
+
+// Quietly pings the server so a sleeping server starts waking up early
+export function wakeServer() {
+  const stopTracking = trackSlow()
+  fetch(`${API_URL}/health`)
+    .catch(() => {
+      // nothing to do, real requests show their own errors
+    })
+    .finally(stopTracking)
+}
+
 export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   const token = getToken()
   const isForm = body instanceof FormData
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const stopTracking = trackSlow()
 
   let response
   try {
@@ -43,12 +93,18 @@ export async function api(path, { method = 'GET', body, headers = {} } = {}) {
         ...headers,
       },
       body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+      signal: controller.signal,
     })
-  } catch {
+  } catch (err) {
     throw new ApiError(
       0,
-      'Cannot reach the server. Check your connection and try again.',
+      err?.name === 'AbortError'
+        ? 'The server is taking too long to respond. Please try again.'
+        : 'Cannot reach the server. Check your connection and try again.',
     )
+  } finally {
+    clearTimeout(timeout)
+    stopTracking()
   }
 
   if (response.status === 401 && token) {

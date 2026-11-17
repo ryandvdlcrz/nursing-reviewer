@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../api'
 import Icon from './Icon'
+import NotesPanel from './NotesPanel'
 
 const LETTERS = 'ABCDEF'
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`
@@ -106,6 +107,7 @@ function Results({ result, questions, answers, timeUp, onExit }) {
                       {answer.rationale}
                     </p>
                   )}
+                  <NotesPanel targetType="question" targetId={question.id} />
                 </article>
               )
             })}
@@ -442,6 +444,10 @@ export default function QuizRunner({
           </>
         )}
       </div>
+
+      {showFeedback && (
+        <NotesPanel key={question.id} targetType="question" targetId={question.id} />
+      )}
     </div>
   )
 }
