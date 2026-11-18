@@ -77,14 +77,20 @@ def _call_with_retry(client, model, image_bytes, mime_type, num_questions):
             return _call_model(client, model, image_bytes, mime_type, num_questions)
         except errors.APIError as exc:
             code = getattr(exc, "code", None)
+            message = str(getattr(exc, "message", exc))
             logger.warning(
                 "Gemini call failed: model=%s attempt=%d code=%s message=%s",
                 model,
                 attempt + 1,
                 code,
-                getattr(exc, "message", exc),
+                message,
             )
-            if code not in RETRYABLE_CODES or attempt == len(RETRY_WAITS):
+            daily_quota_used_up = code == 429 and "per day" in message.lower()
+            if (
+                daily_quota_used_up
+                or code not in RETRYABLE_CODES
+                or attempt == len(RETRY_WAITS)
+            ):
                 raise
             time.sleep(RETRY_WAITS[attempt])
 
