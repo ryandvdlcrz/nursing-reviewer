@@ -1,3 +1,4 @@
+import logging
 import time
 
 from google import genai
@@ -6,8 +7,10 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import settings
 
+logger = logging.getLogger(__name__)
+
 RETRYABLE_CODES = {429, 500, 503, 504}
-RETRY_WAITS = [2, 5]  # seconds to wait before retry 1 and retry 2
+RETRY_WAITS = [2, 5, 10]  # seconds to wait before retry 1 and retry 2
 
 
 class GeminiBusyError(Exception):
@@ -74,6 +77,13 @@ def _call_with_retry(client, model, image_bytes, mime_type, num_questions):
             return _call_model(client, model, image_bytes, mime_type, num_questions)
         except errors.APIError as exc:
             code = getattr(exc, "code", None)
+            logger.warning(
+                "Gemini call failed: model=%s attempt=%d code=%s message=%s",
+                model,
+                attempt + 1,
+                code,
+                getattr(exc, "message", exc),
+            )
             if code not in RETRYABLE_CODES or attempt == len(RETRY_WAITS):
                 raise
             time.sleep(RETRY_WAITS[attempt])
@@ -127,6 +137,11 @@ def generate_drafts(
         except errors.APIError as exc:
             code = getattr(exc, "code", None)
             if code in RETRYABLE_CODES or code == 404:
+                logger.warning(
+                    "Giving up on model %s (code=%s), trying next model if any",
+                    model,
+                    code,
+                )
                 continue  # try the next model
             raise
 
